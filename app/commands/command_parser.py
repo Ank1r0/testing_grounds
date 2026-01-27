@@ -38,6 +38,10 @@ def command_parser(input_command):
     elif(input_command.find("ping")== 0):
         print("Ping cmd parsing")
         return CommandResult(action="ping")
+    
+    elif(input_command.find("dataready")== 0):
+        print("ready data parsing")
+        return CommandResult(action="dataready")
         
     else:
         print("Wrong command input, enter help if you need list of all available commands")

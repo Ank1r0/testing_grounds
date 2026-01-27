@@ -12,6 +12,11 @@ class Repository:
         self.rooms_loaded = False
         self.students_loaded = False
 
+    def dataready(self):
+        self.ready_to_use = True
+        self.rooms_loaded = True
+        self.students_loaded = True
+
     def query_ping(self):
               
         # Now self.conn is a real connection object, so .cursor() will work!
@@ -30,6 +35,19 @@ class Repository:
         if(name == "rooms"):
             with open(path, 'r') as f:
                 data = json.load(f)
+
+            sql = """
+            IF EXISTS (SELECT * FROM sys.objects 
+                    WHERE name = 'Table_2_room' AND parent_object_id = OBJECT_ID('student'))
+            BEGIN
+                ALTER TABLE student DROP CONSTRAINT Table_2_room
+                PRINT 'Constraint Dropped'
+            END
+            ELSE
+            BEGIN
+                PRINT 'Constraint not found'
+            END
+            """
 
             cursor.execute(f"SELECT name FROM sys.databases WHERE name = '{taskdb}'")
   
@@ -126,6 +144,24 @@ class Repository:
                 #FOREIGN KEY (room)
                 #REFERENCES room (id);
 
+            if(not self.ready_to_use):
+                print("The data is not ready to be queried.")
+                print(f"table room: {self.rooms_loaded}")
+                print(f"table student: {self.students_loaded}")
+                print(f"overall ready: {self.ready_to_use}")
+
+            if(self.rooms_loaded & self.students_loaded):
+                
+                cursor.execute("""
+                ALTER TABLE student ADD CONSTRAINT Table_2_room
+                FOREIGN KEY (room)
+                REFERENCES room (id);
+                """)
+
+                self.ready_to_use = True
+
+
+
         self.conn.commit()
         print(f"Loading {name} functions finished succesfully.")
 
@@ -133,13 +169,25 @@ class Repository:
             self.ready_to_use = True
         
     def query(self):
+        
         if(not self.ready_to_use):
-            print("The data is not ready to be queried.")
-            print(f"table room: {self.rooms_loaded}")
-            print(f"table student: {self.students_loaded}")
-            print(f"overall ready: {self.ready_to_use}")
+            print("Database missing files, use load commands to populate the data.\n")
             return
         print("EXECUTING QUERY N1")
+
+        cursor = self.conn.cursor()
+
+        cursor.execute("""
+        select count(*) as StudentsInRoom, room from student
+        group by room
+        order by room
+        """)
+        
+
+        for datarow in cursor:
+            print(datarow)
+
+        print("END OF QUERY.")
 
         
 
