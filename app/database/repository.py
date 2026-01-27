@@ -146,12 +146,6 @@ class Repository:
                 #FOREIGN KEY (room)
                 #REFERENCES room (id);
 
-            if(not self.ready_to_use):
-                print("The data is not ready to be queried.")
-                print(f"table room: {self.rooms_loaded}")
-                print(f"table student: {self.students_loaded}")
-                print(f"overall ready: {self.ready_to_use}")
-
             if(self.rooms_loaded & self.students_loaded):
                 
                 cursor.execute("""
@@ -162,6 +156,8 @@ class Repository:
 
                 self.ready_to_use = True
 
+        
+
 
 
         self.conn.commit()
@@ -169,6 +165,18 @@ class Repository:
 
         if(self.rooms_loaded == True & self.students_loaded == True):
             self.ready_to_use = True
+
+
+        print(f"table room: {self.rooms_loaded}")
+        print(f"table student: {self.students_loaded}")
+        print(f"overall ready: {self.ready_to_use}")
+        
+        if(not self.ready_to_use):
+            print("The data is not ready to be queried.")        
+        else:
+            print("The data is ready to be queried.")
+            
+
         
     def query(self):
 
