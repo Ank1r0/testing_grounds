@@ -2,7 +2,11 @@
 from app.commands.command_parser import command_parser
 from app.orchestra import orchestra
 def main():
-    print("Some app is ready to use:")
+
+    print("App is ready to use")
+    print("Enter the command, use -help to list all the commands.\nTo have a fully operating app use the command load")
+    print("Hint, the command load is used to populate 2 main tables, 'rooms' and 'students'\nExample of usage: load -n rooms -p filepath/rooms.json\n")
+
     is_running = True
 
 

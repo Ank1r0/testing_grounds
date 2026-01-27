@@ -9,14 +9,12 @@ class CommandResult:
         
 
 def command_parser(input_command):
-    #input_command = input("Enter the command, use -help to list all the commands.\nTo have a fully operating app use"
-       # "the command load\n"
-       # "Hint, the command load is used to populate 2 main tables, 'rooms' and 'students'\n"
-        #"Example of usage: load -n rooms -p filepath/rooms.json\n"
-       # "load -n students -p filepath/students.json\n")
  
     if(input_command == "exit"):
         return CommandResult(action="exit")
+    
+    if(input_command == "help"):
+        return CommandResult(action="help")
     
     elif(input_command.find("load")== 0):      
         print("Load cmd parsing.")
