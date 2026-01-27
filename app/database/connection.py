@@ -1,25 +1,26 @@
-
+from tkinter import END
 import pyodbc
-
+taskdb = 'somedb'
 class ConnectionManager:
     def __init__(self):
 
+        try:
+            server = 'localhost'  # or '127.0.0.1'
+            port = '1433'
+            database = 'master'  # Default database
+            username = 'sa'
+            password = 'PASSword8'  # Your password
+            driver = '{ODBC Driver 18 for SQL Server}'  # Most common
+            
+            # Connection string
+            conn_str = f'DRIVER={driver};SERVER={server},{port};DATABASE={database};UID={username};PWD={password};Encrypt=no;TrustServerCertificate=yes'
 
-        server = 'localhost'  # or '127.0.0.1'
-        port = '1433'
-        database = 'master'  # Default database
-        username = 'sa'
-        password = 'PASSword8'  # Your password
-        driver = '{ODBC Driver 18 for SQL Server}'  # Most common
-        taskdb = 'somedb'
-        # Connection string
-        conn_str = f'DRIVER={driver};SERVER={server},{port};DATABASE={database};UID={username};PWD={password};Encrypt=no;TrustServerCertificate=yes'
-
-
-        self.congif = conn_str
-        self.connection = None
-
-        self.connect()
+            self.congif = conn_str
+            self.connection = None
+            self.connect()
+        except:
+            print("Connection failed. The most common reason is a driver version. Check your ODBC Driver version. P.S. Should be ODBC Driver 18 for SQL Server.")
+        END
 
         
 
@@ -27,6 +28,7 @@ class ConnectionManager:
         if not self.connection:
             # You MUST call the function with your config string here
             self.connection = pyodbc.connect(self.congif) 
+            self.connection.autocommit = True # - just for testing purposes. 
 
         return self.connection
     
