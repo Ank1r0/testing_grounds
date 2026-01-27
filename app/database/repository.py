@@ -1,0 +1,148 @@
+from app.database.connection import ConnectionManager
+import json
+taskdb = 'somedb'
+
+class Repository:
+        # Inside Repository class
+    def __init__(self, ConnectionManager):
+        self.mgr = ConnectionManager
+        # .connect() returns the active connection object
+        self.conn = self.mgr.connect() 
+        self.ready_to_use = False
+        self.rooms_loaded = False
+        self.students_loaded = False
+
+    def query_ping(self):
+              
+        # Now self.conn is a real connection object, so .cursor() will work!
+        cursor = self.conn.cursor() 
+
+        cursor.execute("SELECT 1")
+        result = cursor.fetchone()
+        cursor.close()
+
+        print("server is working")  if result else print("server doesn't work") 
+        
+    def load(self,name,path):
+        print("load initiated.")
+        cursor = self.conn.cursor() 
+
+        if(name == "rooms"):
+            with open(path, 'r') as f:
+                data = json.load(f)
+
+            cursor.execute(f"SELECT name FROM sys.databases WHERE name = '{taskdb}'")
+  
+            exists = cursor.fetchone()
+            
+            if not(exists):
+                cursor.execute(f"CREATE DATABASE {taskdb}")
+            
+            cursor.execute(f"use {taskdb}")
+
+            cursor.execute(f"""
+            IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[room]') AND type in (N'U'))
+            SELECT 1 ELSE SELECT 0
+            """)
+
+            result = cursor.fetchone() #EXIST - 1, DONT EXIST - 0
+            if(result[0] == 0):
+                                         
+                cursor.execute(f"""CREATE TABLE Room(
+                        id int PRIMARY KEY NOT NULL,
+                        RoomName nvarchar(15)
+                )
+                """)   
+                print("table room created")   
+
+            cursor.execute("TRUNCATE TABLE Room")
+
+            sql = "INSERT INTO ROOM (id, RoomName) VALUES (?, ?)"
+
+            success = True
+            try:
+                for entry in data:
+                    # Pass values as a tuple to prevent SQL injection
+                    cursor.execute(sql, (entry['id'], entry['name']))
+            except:
+                print(f"Error during loading {name}")
+                success = False
+
+            if(success):
+                self.rooms_loaded = True
+            
+
+        if(name == "students"):
+            with open(path, 'r') as f:
+                data = json.load(f)
+
+        
+            cursor.execute(f"SELECT name FROM sys.databases WHERE name = '{taskdb}'")
+  
+            exists = cursor.fetchone()
+            
+            if not(exists):
+                cursor.execute(f"CREATE DATABASE {taskdb}")
+            
+            cursor.execute(f"use {taskdb}")
+
+            cursor.execute(f"""
+            IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Student]') AND type in (N'U'))
+            SELECT 1 ELSE SELECT 0
+            """)
+
+            result = cursor.fetchone() #EXIST - 1, DONT EXIST - 0
+    
+            if(result[0] == 0):                       
+                cursor.execute(f"""CREATE TABLE student 
+                            (
+                            birthdate date  NOT NULL,
+                            id int  PRIMARY KEY NOT NULL,
+                            fullname NVARCHAR(50)  NOT NULL,
+                            room int  NOT NULL,
+                            sex nvarchar(1)  NOT NULL,
+                            );
+                    
+                """)   
+                print("table student created")   
+            
+            cursor.execute("TRUNCATE TABLE Student")
+
+            sql = "INSERT INTO Student (birthdate,id,fullname,room,sex) VALUES (?, ?, ?, ?, ?)"
+
+            success = True
+            try:
+                for entry in data:
+                    # Pass values as a tuple to prevent SQL injection
+                    cursor.execute(sql, (entry['birthday'], entry['id'], entry['name'], entry['room'], entry['sex']))
+            except:
+                print(f"Error during loading {name}")
+                success = False
+
+            if(success):
+                self.students_loaded = True
+
+                #ALTER TABLE student ADD CONSTRAINT Table_2_room
+                #FOREIGN KEY (room)
+                #REFERENCES room (id);
+
+        self.conn.commit()
+        print(f"Loading {name} functions finished succesfully.")
+
+        if(self.rooms_loaded == True & self.students_loaded == True):
+            self.ready_to_use = True
+        
+    def query(self):
+        if(not self.ready_to_use):
+            print("The data is not ready to be queried.")
+            print(f"table room: {self.rooms_loaded}")
+            print(f"table student: {self.students_loaded}")
+            print(f"overall ready: {self.ready_to_use}")
+            return
+        print("EXECUTING QUERY N1")
+
+        
+
+        
+        
+            
