@@ -36,7 +36,18 @@ class Repository:
             with open(path, 'r') as f:
                 data = json.load(f)
 
-            sql = """
+            cursor.execute(f"SELECT name FROM sys.databases WHERE name = '{taskdb}'")
+
+            exists = cursor.fetchone() 
+            
+            
+            if not(exists):
+                cursor.execute(f"CREATE DATABASE {taskdb}")
+            
+            cursor.execute(f"use {taskdb}")
+
+
+            cursor.execute("""
             IF EXISTS (SELECT * FROM sys.objects 
                     WHERE name = 'Table_2_room' AND parent_object_id = OBJECT_ID('student'))
             BEGIN
@@ -47,16 +58,7 @@ class Repository:
             BEGIN
                 PRINT 'Constraint not found'
             END
-            """
-
-            cursor.execute(f"SELECT name FROM sys.databases WHERE name = '{taskdb}'")
-  
-            exists = cursor.fetchone()
-            
-            if not(exists):
-                cursor.execute(f"CREATE DATABASE {taskdb}")
-            
-            cursor.execute(f"use {taskdb}")
+            """)
 
             cursor.execute(f"""
             IF EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[room]') AND type in (N'U'))
@@ -170,12 +172,25 @@ class Repository:
         
     def query(self):
         
+        cursor = self.conn.cursor()
+
         if(not self.ready_to_use):
             print("Database missing files, use load commands to populate the data.\n")
             return
         print("EXECUTING QUERY N1")
+        
+        cursor.execute(f"SELECT name FROM sys.databases WHERE name = '{taskdb}'")
 
-        cursor = self.conn.cursor()
+        exists = cursor.fetchone() 
+        
+        
+        if not(exists):
+            print("Database is not ready to use, missing prepared database, use load function to create a database with the data.")
+            return
+
+        cursor.execute(f"use {taskdb}")
+
+        
 
         cursor.execute("""
         select count(*) as StudentsInRoom, room from student
