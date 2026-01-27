@@ -171,6 +171,11 @@ class Repository:
             self.ready_to_use = True
         
     def query(self):
+
+        #--q2
+        #    SELECT TOP 5 room,AVG(YEAR(GETDATE()) - YEAR(birthdate)) AS SMTH FROM student
+        #    group by room
+        #    order by AVG(YEAR(GETDATE()) - YEAR(birthdate))
         
         cursor = self.conn.cursor()
 
@@ -191,7 +196,7 @@ class Repository:
         cursor.execute(f"use {taskdb}")
 
         
-
+        #--Q1
         cursor.execute("""
         select count(*) as StudentsInRoom, room from student
         group by room
